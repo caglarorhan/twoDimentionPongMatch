@@ -36,8 +36,8 @@ const tdpm = {
         `;
         strikerDiv.innerHTML = strikerDiv.id;
         document.querySelector(`#${oStriker.hostBoardId}`).append(strikerDiv);
-        strikerDiv.where=this.where.bind(document.querySelector('#'+strikerDiv.id),oStriker.hostBoardId);
-        strikerDiv.there=this.there.bind(document.querySelector('#'+strikerDiv.id));
+        strikerDiv.where=this.whereIs.bind(document.querySelector('#'+strikerDiv.id),oStriker.hostBoardId);
+        strikerDiv.there=this.toThere.bind(document.querySelector('#'+strikerDiv.id));
 
     },
     createPuck(oPuck){
@@ -61,6 +61,9 @@ const tdpm = {
         `;
         puckDiv.innerHTML = puckDiv.id;
         document.querySelector(`#${oPuck.hostBoardId}`).append(puckDiv);
+        puckDiv.where=this.whereIs.bind(document.querySelector('#'+puckDiv.id),oPuck.hostBoardId);
+        puckDiv.there=this.toThere.bind(document.querySelector('#'+puckDiv.id));
+        puckDiv.canMove = this.physicsPropInstaller.canMove.bind(document.querySelector('#'+puckDiv));
     },
 //---------------------------------------------------------
     init(config){
@@ -75,7 +78,7 @@ const tdpm = {
         })
 
     },
-    where(hostBoardId){
+    whereIs(hostBoardId){
         let hostBoard = document.getElementById(hostBoardId);
         //TODO: board border degeri sapmaya neden oluyor debug edilecek
         console.log(hostBoard.offsetLeft)
@@ -90,27 +93,41 @@ const tdpm = {
             };
         return objCoord;
     },
-    there(x,y){
+    toThere(x, y){
         let hostBoard = document.getElementById(hostBoardId);
         //TODO: board border degeri sapmaya neden oluyor debug edilecek
         this.style.left = (x+hostBoard.x)+'px';
         this.style.top = (y+hostBoard.y)+'px';
-    }
-}
+    },
+    physicsPropInstaller() {
+        this.canMove= ()=>{
 
+        };
+        this.canStop = ()=>{
+
+        };
+        this.canGraspable = ()=>{
+
+        }
+    }
+
+
+}
+//-------------------------------------------------------------------------
 window.addEventListener('load',()=>{
     tdpm.init({
         board:[
-            {id:'board_1', bWidth:'1500px', bHeight:'1000px'}
+            {id:'board_1', bWidth:'1500px', bHeight:'800px'}
             ],
         puck:[
             {id:'puck_1', pDiameter:'100px ', color:'red', borderRadius:'50%', hostBoardId:'board_1', startInPosition:{position:'middle', x:null, y: null}}
             ],
         striker:[
-            {name:'Player_1', id:'Player_1', sDiameter:'50px', borderRadius:'50%', color:'blue', hostBoardId:'board_1'},
+            {name:'Player_1', id:'Player_1', sDiameter:'50px', borderRadius:'50%', color:'blue', hostBoardId:'board_1', physicProps:['canMove','canGraspable']},
             {name:'Player_2', id:'Player_2', sDiameter:'50px', borderRadius:'50%', color:'orange', hostBoardId:'board_1'}
             ],
         airflow:{}
 
     });
+
 })
