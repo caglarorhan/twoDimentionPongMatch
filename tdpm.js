@@ -15,6 +15,7 @@ const tdpm = {
     createStriker(oStriker){
         let strikerDiv =document.createElement('div');
         strikerDiv.id = oStriker.id;
+        strikerDiv.title = oStriker.id;
         strikerDiv.name = oStriker.name;
         strikerDiv.style.cssText = `
         width: ${oStriker.sDiameter};
@@ -34,15 +35,20 @@ const tdpm = {
         cursor:grab;
         user-select:none;
         `;
-        strikerDiv.innerHTML = strikerDiv.id;
-        document.querySelector(`#${oStriker.hostBoardId}`).append(strikerDiv);
-        strikerDiv.where=this.whereIs.bind(document.querySelector('#'+strikerDiv.id),oStriker.hostBoardId);
-        strikerDiv.there=this.toThere.bind(document.querySelector('#'+strikerDiv.id));
 
+        document.querySelector(`#${oStriker.hostBoardId}`).append(strikerDiv);
+
+        oStriker.locateProps.forEach(prop=>{
+            strikerDiv[prop] = this.locatePropInstaller[prop].bind(strikerDiv);
+        })
+        oStriker.physicProps.forEach(prop=>{
+            strikerDiv[prop]=this.physicsPropInstaller[prop].bind(strikerDiv);
+        })
     },
     createPuck(oPuck){
         let puckDiv = document.createElement('div');
         puckDiv.id = oPuck.id;
+        puckDiv.title = oPuck.id;
         puckDiv.style.cssText= `
         width: ${oPuck.pDiameter};
         height: ${oPuck.pDiameter};
@@ -59,11 +65,14 @@ const tdpm = {
         overflow:hidden;
         
         `;
-        puckDiv.innerHTML = puckDiv.id;
         document.querySelector(`#${oPuck.hostBoardId}`).append(puckDiv);
-        puckDiv.where=this.whereIs.bind(document.querySelector('#'+puckDiv.id),oPuck.hostBoardId);
-        puckDiv.there=this.toThere.bind(document.querySelector('#'+puckDiv.id));
-        puckDiv.canMove = this.physicsPropInstaller.canMove.bind(document.querySelector('#'+puckDiv));
+        oPuck.locateProps.forEach(prop=>{
+            puckDiv[prop] = this.locatePropInstaller[prop].bind(puckDiv);
+        })
+        oPuck.physicProps.forEach(prop=>{
+             puckDiv[prop]=this.physicsPropInstaller[prop].bind(puckDiv);
+        })
+        puckDiv.canMove();
     },
 //---------------------------------------------------------
     init(config){
@@ -78,35 +87,39 @@ const tdpm = {
         })
 
     },
-    whereIs(hostBoardId){
-        let hostBoard = document.getElementById(hostBoardId);
-        //TODO: board border degeri sapmaya neden oluyor debug edilecek
-        console.log(hostBoard.offsetLeft)
-        let boardPosition = {
-            x:hostBoard.offsetLeft,
-            y:hostBoard.offsetTop,
-        }
-        // Goreceli olarak board icinin degerlerini verecek 0,0 noktasi boardin sol ust kosesi
-        let objCoord ={
-            x:parseInt(window.getComputedStyle(this).getPropertyValue('left'))-boardPosition.x,
-            y:parseInt(window.getComputedStyle(this).getPropertyValue('top'))-boardPosition.y
+    locatePropInstaller:{
+        whereIs(){
+            let hostBoard = document.getElementById(this.hostBoardId);
+            //TODO: board border degeri sapmaya neden oluyor debug edilecek
+            console.log(hostBoard.offsetLeft)
+            let boardPosition = {
+                x:hostBoard.offsetLeft,
+                y:hostBoard.offsetTop,
+            }
+            // Goreceli olarak board icinin degerlerini verecek 0,0 noktasi boardin sol ust kosesi
+            let objCoord ={
+                x:parseInt(window.getComputedStyle(this).getPropertyValue('left'))-boardPosition.x,
+                y:parseInt(window.getComputedStyle(this).getPropertyValue('top'))-boardPosition.y
             };
-        return objCoord;
+            return objCoord;
+        },
+        goThere(x, y){
+            let hostBoard = document.getElementById(hostBoardId);
+            //TODO: board border degeri sapmaya neden oluyor debug edilecek
+            this.style.left = (x+hostBoard.x)+'px';
+            this.style.top = (y+hostBoard.y)+'px';
+        }
     },
-    toThere(x, y){
-        let hostBoard = document.getElementById(hostBoardId);
-        //TODO: board border degeri sapmaya neden oluyor debug edilecek
-        this.style.left = (x+hostBoard.x)+'px';
-        this.style.top = (y+hostBoard.y)+'px';
-    },
-    physicsPropInstaller() {
-        this.canMove= ()=>{
+    physicsPropInstaller:{
+        canMove(){
+            this.addEventListener('mousedown',()=>{
+                console.log('mouse down oldu')
+            })
+        },
+        canStop(){
 
-        };
-        this.canStop = ()=>{
-
-        };
-        this.canGraspable = ()=>{
+        },
+        canGraspable(){
 
         }
     }
@@ -120,11 +133,20 @@ window.addEventListener('load',()=>{
             {id:'board_1', bWidth:'1500px', bHeight:'800px'}
             ],
         puck:[
-            {id:'puck_1', pDiameter:'100px ', color:'red', borderRadius:'50%', hostBoardId:'board_1', startInPosition:{position:'middle', x:null, y: null}}
+            {id:'puck_1', pDiameter:'100px ', color:'red', borderRadius:'50%', hostBoardId:'board_1', startInPosition:{position:'middle', x:null, y: null},
+                physicProps:['canMove', 'canStop'],
+                locateProps:['goThere', 'whereIs']
+            }
             ],
         striker:[
-            {name:'Player_1', id:'Player_1', sDiameter:'50px', borderRadius:'50%', color:'blue', hostBoardId:'board_1', physicProps:['canMove','canGraspable']},
-            {name:'Player_2', id:'Player_2', sDiameter:'50px', borderRadius:'50%', color:'orange', hostBoardId:'board_1'}
+            {name:'Player_1', id:'Player_1', sDiameter:'50px', borderRadius:'50%', color:'blue', hostBoardId:'board_1',
+                physicProps:['canMove','canGraspable', 'canStop'],
+                locateProps:['goThere', 'whereIs']
+            },
+            {name:'Player_2', id:'Player_2', sDiameter:'50px', borderRadius:'50%', color:'orange', hostBoardId:'board_1',
+                physicProps:['canMove','canGraspable', 'canStop'],
+                locateProps:['goThere', 'whereIs']
+            }
             ],
         airflow:{}
 
